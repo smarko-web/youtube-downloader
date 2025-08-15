@@ -2,63 +2,71 @@ import axios from "axios";
 import { useOutletContext } from "react-router-dom";
 import { toast } from 'react-toastify';
  
-
 const Form = ({type}) => {
-  const { url, setUrl, handleType, videoId, setVideoId } = useOutletContext();
-  
+  const { url, setUrl, handleType, videoId, setVideoId, isConverting, setIsConverting } = useOutletContext();
+ 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const inputData = new FormData(e.target);
-    const inputUrl = inputData.get('url');
-    // const inputTitle = !inputUrl ? '' || type : `${type}`;
-    const inputTitle = inputData.get('title') || type;
-    const {
-      data: { msg },
-    } = await axios({
-      method: 'post',
-      url: `http://localhost:3000/convert?type=${type}`,
-      data: {
-        link: inputUrl,
-        title: inputTitle,
-      },
-    });
-    // msg.includes('downloaded') ? await axios.get('http://127.0.0.1:3000/downloadFile') : false;
-    msg.includes('downloaded') && type === 'video' ? await downloadToClient(inputTitle, 'mp4') : false;
-    msg.includes('downloaded') && type === 'audio' ? await downloadToClient(inputTitle, 'mp3') : false;
-    !msg.includes('downloaded') ? toast.error(msg) : toast.success(msg);
-  }
+    setIsConverting(true);
+   const formData = new FormData(e.target);
+   const inputUrl = formData.get('url');
+   const inputTitle = formData.get('title') || type;
+
+   try {
+     const response = await axios.post(
+       `${
+         import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+       }/convert?type=${type}`,
+       {
+         link: inputUrl,
+         title: inputTitle,
+       }
+     );
+
+     const { msg } = response.data;
+
+     if (msg.includes('Downloaded')) {
+        setUrl(''); 
+        setVideoId(''); 
+        await downloadToClient(inputTitle, type === 'video' ? 'mp4' : 'mp3');
+        formData.delete('url');
+        formData.delete('title');
+        toast.success(msg);
+     } else {
+        toast.error(msg);
+     }
+   } catch (error) {
+     console.error('Error during conversion:', error);
+     toast.error('Conversion failed. Check server logs.');
+   } finally {
+     setIsConverting(false);
+   }
+  };
   const downloadToClient = async (fileName, fileExtension) => {
     try {
-      const {data} = await axios.get('http://127.0.0.1:3000/downloadFile', {
+      const response = await axios.get(`${
+         import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'
+       }/downloadFile`, {
+        params: {
+          title: fileName,
+          type,
+        },
         responseType: 'blob',
       });
-      console.log(data);
-      download(data, `${fileName}.${fileExtension}`);
+      
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${fileName}.${fileExtension}`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (error) {
-      return toast.error(error);
+      console.error('Error downloading file:', error);
+      toast.error('Download failed.');
     }
-    // const { data } = await axios.get('http://127.0.0.1:3000/downloadFile', {
-    //   responseType: 'blob',
-    // });
-    // console.log(await data);
-    // const response = await fetch('http://127.0.0.1:3000/downloadFile');
-    // const resBlob = await response.blob();
-    // console.log(await resBlob);
-    // // create file link in browser's memory
-    // const href = URL.createObjectURL(resBlob);
-
-    // // create "a" HTML element with href to file & click
-    // const link = document.createElement('a');
-    // link.href = await href;
-    // link.setAttribute('download', `${fileName}.${fileExtension}`); //or any other extension
-    // document.body.appendChild(link);
-    // link.click();
-
-    // // clean up "a" element & remove ObjectURL
-    // document.body.removeChild(link);
-    // URL.revokeObjectURL(href);
-    // console.log(data);
-    // download(data, 'test.mp4');
   }
   const autoPaste = async () => {
     try {
@@ -81,15 +89,25 @@ const Form = ({type}) => {
   }
   return (
     <section className="container">
-        <h1>{type} converter</h1>
-        <form action="" method="post" onSubmit={handleSubmit}>
-            <input type="text" name="url" onClick={autoPaste} onChange={(e) => handleType(e)} placeholder="Paste YouTube link" value={url || ''}/>
-            {videoId && <input type="text" name="title" placeholder={`name ${type} file`}/>}
-            <button type="submit">
-                convert {type}
-            </button>
-        </form>
+      <h1>{type} converter</h1>
+      <form action="" method="post" onSubmit={handleSubmit}>
+        <input
+          type="text"
+          name="url"
+          onClick={autoPaste}
+          onTouchStart={autoPaste}
+          onChange={(e) => handleType(e)}
+          placeholder="Paste YouTube link"
+          value={url || ''}
+        />
+        {videoId && (
+          <input type="text" name="title" placeholder={`name ${type} file`} />
+        )}
+        <button type="submit" disabled={isConverting}>
+          {isConverting ? `Converting ${type}...` : `Convert ${type}`}
+        </button>
+      </form>
     </section>
-  )
+  );
 }
 export default Form;

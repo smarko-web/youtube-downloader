@@ -1,26 +1,42 @@
-import React, {useState} from 'react';
+import {useState, useEffect, useRef} from 'react';
 import {Outlet} from 'react-router-dom';
 import {Header} from '../components';
 import { ToastContainer, toast } from 'react-toastify';
 const Layout = () => {
-  const [url, setUrl] = useState(''); 
+  const [url, setUrl] = useState('');
   const [videoId, setVideoId] = useState('');
+  const [progress, setProgress] = useState(null);
+  const [isConverting, setIsConverting] = useState(false);
 
-  // const validateYoutubeUrl = (url) => {
-  //   if (!url) {
-  //     return toast.error('please enter a link');
-  //   }
+  const toastId = useRef(null);
+  useEffect(() => {
+    if (!isConverting) return;
 
-  //   var regExp = /^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$/;
+    const eventSource = new EventSource(
+      `${import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'}/progress`
+    );
 
-  //   if (!url.match(regExp)) {
-  //     return toast.error('url must be a youtube video');
-  //   }
-  //   // toast.success('video fetched');
-  //   setUrl(url);
-  
-  //   // setVideoId(url.match(regExp)[1]);
-  // };
+    eventSource.onmessage = (event) => {
+      const { message } = JSON.parse(event.data);
+      setProgress(message);
+
+      if (!toast.isActive(toastId.current)) {
+        toastId.current = toast.info(message, { toastId: 'progress-toast' });
+      } else {
+        toast.update('progress-toast', { render: message });
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error('EventSource failed:', err);
+      eventSource.close();
+    };
+
+    return () => {
+      setProgress(null);
+      eventSource.close();
+    };
+  }, [isConverting]); 
 
   const handleType = (e) => {
     if (e.target.value === '') {
@@ -35,14 +51,24 @@ const Layout = () => {
     } else {
       setUrl(e.target.value);
     }
-  }
-  
+  };
+
   return (
     <>
       <ToastContainer position="top-center" autoClose="3000" />
       <Header />
       <main>
-        <Outlet context={{ url,setUrl, videoId, setVideoId, handleType }} />
+        <Outlet
+          context={{
+            url,
+            setUrl,
+            videoId,
+            setVideoId,
+            handleType,
+            isConverting,
+            setIsConverting,
+          }}
+        />
       </main>
     </>
   );
