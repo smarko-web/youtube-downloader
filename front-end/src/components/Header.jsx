@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   FaBars,
@@ -46,9 +46,9 @@ const Header = () => {
   return (
     <header>
       <div className="container">
-        <div className="logo">
+        <Link to="/" className="logo">
           youtube <span>4</span> u
-        </div>
+        </Link>
         {isSidebarOpen ? (
           <FaTimes onClick={toggleSidebar} />
         ) : (

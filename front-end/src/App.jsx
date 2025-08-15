@@ -3,7 +3,7 @@ import { Header, Form, VideoPrev, Sidebar } from './components';
 import './App.css'
 import { createContext } from 'react';
 import {createBrowserRouter, RouterProvider} from 'react-router-dom';
-import { AudioConverter, Layout, VideoConverter } from './pages';
+import { AudioConverter, Home, Layout, VideoConverter } from './pages';
 // export const MyContext = createContext();
 
 
@@ -13,13 +13,17 @@ const router = new createBrowserRouter([
     element: <Layout />,
     children: [
       {
-        path: 'video',
-        element: <VideoConverter/>,
+        path: '',
+        element: <Home />,
         index: true,
       },
       {
+        path: 'video',
+        element: <VideoConverter />,
+      },
+      {
         path: 'audio',
-        element: <AudioConverter/>,
+        element: <AudioConverter />,
       },
     ],
     errorElement: <h1>404</h1>,

@@ -3,7 +3,6 @@ import { Form, VideoPrev } from "../components";
 
 const VideoConverter = () => {
   const {videoId} = useOutletContext();
-  // console.log(videoId);
   return (
     <>
       <Form type={"video"}/>

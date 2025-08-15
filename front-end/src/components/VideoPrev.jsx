@@ -1,15 +1,16 @@
 import { useOutletContext } from "react-router-dom";
-
+import ReactPlayer from 'react-player';
 const VideoPrev = ({videoId}) => {
-  // https://www.youtube.com/watch?v=draPIiNIIfI
- 
   return (
     <section className="video-prev">
-      <iframe
-        width="100%"
-        height="100%"
-        src={`https://www.youtube.com/embed/${videoId}`}
-      ></iframe>
+      <ReactPlayer
+        src={`https://www.youtube.com/watch?v=${videoId}`}
+        controls={true}
+        style={{
+          width: '100%',
+          height: '100%',
+        }}
+      />
     </section>
   );
 }
