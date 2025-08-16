@@ -1,5 +1,4 @@
 import axios from "axios";
-// import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { toast } from 'react-toastify';
  
@@ -28,7 +27,8 @@ const Form = ({type}) => {
         setUrl(''); 
         setVideoId(''); 
         await downloadToClient(inputTitle, type === 'video' ? 'mp4' : 'mp3');
-        formData.delete();
+        formData.delete('url');
+        formData.delete('title');
         toast.success(msg);
      } else {
         toast.error(msg);

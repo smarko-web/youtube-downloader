@@ -3,14 +3,15 @@ import {Outlet} from 'react-router-dom';
 import {Header} from '../components';
 import { ToastContainer, toast } from 'react-toastify';
 const Layout = () => {
-  const [url, setUrl] = useState(''); 
+  const [url, setUrl] = useState('');
   const [videoId, setVideoId] = useState('');
   const [progress, setProgress] = useState(null);
   const [isConverting, setIsConverting] = useState(false);
 
   const toastId = useRef(null);
-
   useEffect(() => {
+    if (!isConverting) return;
+
     const eventSource = new EventSource('http://localhost:3000/progress');
 
     eventSource.onmessage = (event) => {
@@ -24,11 +25,16 @@ const Layout = () => {
       }
     };
 
+    eventSource.onerror = (err) => {
+      console.error('EventSource failed:', err);
+      eventSource.close();
+    };
+
     return () => {
       setProgress(null);
       eventSource.close();
     };
-  }, []);
+  }, [isConverting]); 
 
   const handleType = (e) => {
     if (e.target.value === '') {
@@ -44,13 +50,23 @@ const Layout = () => {
       setUrl(e.target.value);
     }
   };
-  
+
   return (
     <>
       <ToastContainer position="top-center" autoClose="3000" />
       <Header />
       <main>
-        <Outlet context={{ url,setUrl, videoId, setVideoId, handleType, isConverting, setIsConverting }} />
+        <Outlet
+          context={{
+            url,
+            setUrl,
+            videoId,
+            setVideoId,
+            handleType,
+            isConverting,
+            setIsConverting,
+          }}
+        />
       </main>
     </>
   );
