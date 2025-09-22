@@ -112,6 +112,25 @@ const downloadVideoWithAudio = async (videoURL, outputFile) => {
   }
 };
 
+app.post('/getInfo', verifyYoutube, async (req, res) => {
+  const { link } = req.body;
+  
+  try {
+    const {videoDetails} = await ytdl.getBasicInfo(link);
+    const { title, lengthSeconds, chapters } = videoDetails;
+
+
+    res.status(200).json({
+      msg: 'Video info fetched successfully',
+      info: { title, lengthSeconds, chapters },
+      // info: { videoDetails },
+    });
+  } catch (err) {
+    console.error('Error fetching video info:', err);
+    res.status(500).json({ msg: 'Failed to fetch video info', error: err.message });
+  }
+});
+
 app.post('/convert', verifyYoutube, async (req, res) => {
   const { link, title } = req.body; 
   const { type } = req.query;

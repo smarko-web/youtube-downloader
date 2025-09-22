@@ -2,9 +2,15 @@ import {useState, useEffect, useRef} from 'react';
 import {Outlet} from 'react-router-dom';
 import {Header} from '../components';
 import { ToastContainer, toast } from 'react-toastify';
+import axios from 'axios';
 const Layout = () => {
   const [url, setUrl] = useState('');
   const [videoId, setVideoId] = useState('');
+  const [videoTitle, setVideoTitle] = useState('');
+  const [videoLength, setVideoLength] = useState(null);
+  const [videoChapters, setVideoChapters] = useState([]);
+  const [isVideoClipped, setIsVideoClipped] = useState(false);
+  const [videoClipTimestamps, setVideoClipTimestamps] = useState({startTime: 0, endTime: videoLength});
   const [progress, setProgress] = useState(null);
   const [isConverting, setIsConverting] = useState(false);
 
@@ -36,18 +42,50 @@ const Layout = () => {
       setProgress(null);
       eventSource.close();
     };
-  }, [isConverting]); 
+  }, [isConverting]);
 
-  const handleType = (e) => {
+  const getVideoInfo = async (url) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_SERVER_URL || 'http://localhost:3000'}/getInfo`,
+        {
+          link: url,
+        }
+      );
+      const { msg, info } = response.data;
+      msg !== 'Video info fetched successfully' &&
+        toast.error('could not fetch video info');
+      const { title, lengthSeconds, chapters } = info;
+      return { title, lengthSeconds, chapters };
+    } catch (error) {
+      console.error('Error fetching video info:', error);
+      toast.error('Failed to fetch video info.');
+    }
+  };
+
+  const handleType = async(e) => {
     if (e.target.value === '') {
       setVideoId('');
       setUrl('');
+      setVideoTitle('');
+      setVideoLength(null);
+      setVideoChapters({});
+      setIsVideoClipped(false);
+      setIsConverting(false);
+      setVideoClipTimestamps({ startTime: 0, endTime: videoLength });
+      setProgress(null);
     }
     var regExp =
       /^(?:https?:\/\/)?(?:m\.|www\.)?(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))((\w|-){11})(?:\S+)?$/;
     if (e.target.value.match(regExp)) {
       setVideoId(e.target.value.match(regExp)[1]);
       setUrl(e.target.value);
+      const { title, lengthSeconds, chapters } = await getVideoInfo(
+        e.target.value
+      );
+      setVideoTitle(title);
+      setVideoLength(lengthSeconds);
+      setVideoChapters(chapters);
     } else {
       setUrl(e.target.value);
     }
@@ -63,10 +101,22 @@ const Layout = () => {
             url,
             setUrl,
             videoId,
+            getVideoInfo,
+            videoTitle,
+            setVideoTitle,
+            videoLength,
+            setVideoLength,
+            videoChapters,
+            setVideoChapters,
+            isVideoClipped,
+            setIsVideoClipped,
+            videoClipTimestamps,
+            setVideoClipTimestamps,
             setVideoId,
             handleType,
             isConverting,
             setIsConverting,
+            setProgress,
           }}
         />
       </main>
