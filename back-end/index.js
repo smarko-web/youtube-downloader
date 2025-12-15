@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
+const axios = require('axios');
 const ytdl = require('ytdl-core');
+const { search : youtubeSearch } = require('youtube-search-without-api-key');
 const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 const path = require('path');
@@ -111,6 +113,51 @@ const downloadVideoWithAudio = async (videoURL, outputFile) => {
     });
   }
 };
+
+app.post('/searchSuggestions', async (req, res) => {
+  const {searchTerm} = req.body;
+
+  const {data: suggestions} = await axios.get(`http://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${searchTerm}`);
+
+  
+  res.status(200).json({
+    msg: 'Search suggestions fetched successfully',
+    suggestions: suggestions[1]
+  });
+})
+
+app.post('/search', async (req, res) => {
+  const {searchTerm} = req.body;
+  res.set(
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, proxy-revalidate'
+  );
+  if(!searchTerm || searchTerm === '') {
+    return res.status(200).json({msg: "please enter a search term"});
+  } 
+  try {
+    const rawSearchRes = await youtubeSearch(searchTerm);
+
+    const formatedVideoSearchRes = rawSearchRes.map(({id: {videoId}, url: videoUrl, title, duration_raw : length, snippet: {thumbnails: {url : thumbnailUrl}, publishedAt}, views}) => {
+      const streamed = typeof publishedAt === 'string' && publishedAt.includes('Streamed');
+      return {
+        videoId, videoUrl, title, length, publishedAt, views, thumbnailUrl, wasLive: streamed
+      };
+    });
+
+    res.status(200).json({
+      msg: 'Video search successfully',
+      searchResults: formatedVideoSearchRes
+    });
+  } catch (err) {
+    console.error('Error searching for video:', err);
+    res
+      .status(500)
+      .json({ msg: 'Failed to search video', error: err.message });
+  }
+  
+});
+
 
 app.post('/getInfo', verifyYoutube, async (req, res) => {
   const { link } = req.body;

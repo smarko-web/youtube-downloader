@@ -1,14 +1,12 @@
-import { useOutletContext } from "react-router-dom";
-import { Form, VideoPrev } from "../components";
+import { Form, ActionBtns } from "../components";
 
 const VideoConverter = () => {
-  const {videoId} = useOutletContext();
   return (
     <>
-      <Form type={"video"}/>
-      {videoId && <VideoPrev videoId={videoId}/>}  
+      <Form type={'video'} />
+      <ActionBtns/>
     </>
-  )
+  );
 };
 
 export default VideoConverter;

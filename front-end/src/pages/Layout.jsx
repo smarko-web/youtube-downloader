@@ -10,6 +10,11 @@ const Layout = () => {
   const [videoLength, setVideoLength] = useState(null);
   const [videoChapters, setVideoChapters] = useState([]);
   const [isVideoClipped, setIsVideoClipped] = useState(false);
+  const [mainActionType, setMainActionType] = useState('search');
+  const [isVideoPrevShow, setIsVideoPrevShow] = useState(false);
+  const [isVideoSearchShow, setIsVideoSearchShow] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   const [videoClipTimestamps, setVideoClipTimestamps] = useState({startTime: 0, endTime: videoLength});
   const [progress, setProgress] = useState(null);
   const [isConverting, setIsConverting] = useState(false);
@@ -67,6 +72,7 @@ const Layout = () => {
     if (e.target.value === '') {
       setVideoId('');
       setUrl('');
+      setMainActionType('search');
       setVideoTitle('');
       setVideoLength(null);
       setVideoChapters({});
@@ -80,6 +86,7 @@ const Layout = () => {
     if (e.target.value.match(regExp)) {
       setVideoId(e.target.value.match(regExp)[1]);
       setUrl(e.target.value);
+      setMainActionType('prev');
       const { title, lengthSeconds, chapters } = await getVideoInfo(
         e.target.value
       );
@@ -93,9 +100,9 @@ const Layout = () => {
 
   return (
     <>
-      <ToastContainer position="top-center" autoClose="3000" />
+      <ToastContainer position="top-center" autoClose='3000'/>
       <Header />
-      <main>
+      <main className="w-full flex flex-col items-center px-4">
         <Outlet
           context={{
             url,
@@ -110,6 +117,16 @@ const Layout = () => {
             setVideoChapters,
             isVideoClipped,
             setIsVideoClipped,
+            mainActionType,
+            setMainActionType,
+            isVideoPrevShow,
+            setIsVideoPrevShow,
+            isVideoSearchShow,
+            setIsVideoSearchShow,
+            searchTerm,
+            setSearchTerm,
+            searchResults,
+            setSearchResults,
             videoClipTimestamps,
             setVideoClipTimestamps,
             setVideoId,
