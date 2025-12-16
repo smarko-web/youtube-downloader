@@ -144,24 +144,6 @@ const SearchPrev = ({ onClose }) => {
     };
   }, [onClose]);
  
-  // const handleSearchType = async (e) => {
-  //   const searchTerm = e.target.value;
-
-  //   try {
-  //     const { data } = await axios.post('http://127.0.0.1:3000/searchSuggestions', {
-  //       searchTerm
-  //     });
-  //     const { msg, suggestions } = data;
-
-  //     if (msg.includes('Search suggestions fetched successfully')) {
-  //       console.log(suggestions);
-  //       setSearchSuggestions(suggestions);
-  //     }
-  //   } catch (error) {
-  //     console.error(`sever error: ${error}`);
-  //   }
-  // };
- 
   const fetchSuggestions = async (q) => {
     if (!q || q.trim() === '') {
       setSearchSuggestions([]);
@@ -169,9 +151,14 @@ const SearchPrev = ({ onClose }) => {
       return;
     }
     try {
-      const { data } = await axios.post('http://127.0.0.1:3000/searchSuggestions', {
-        searchTerm: q
-      });
+      const { data } = await axios.post(
+        `${
+          import.meta.env.VITE_SERVER_URL || "http://localhost:3000"
+        }/searchSuggestions`,
+        {
+          searchTerm: q,
+        }
+      );
       const { msg, suggestions } = data;
       if (msg && msg.includes('Search suggestions fetched successfully') && Array.isArray(suggestions)) {
         setSearchSuggestions(suggestions);
@@ -240,7 +227,7 @@ const SearchPrev = ({ onClose }) => {
     const searchTermInput = searchInput || '';
     setIsSearching(true);
     try {
-      const { data } = await axios.post('http://127.0.0.1:3000/search', {
+      const { data } = await axios.post(`${import.meta.env.VITE_SERVER_URL || "http://localhost:3000"}/search`, {
         searchTerm: searchTermInput,
       });
       const { msg, searchResults } = data;

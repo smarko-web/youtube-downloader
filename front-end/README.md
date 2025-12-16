@@ -89,7 +89,7 @@ front-end/
 ![mobile audio auto paste](./public/screenshots/mobileAudioAutoPaste.png)
 ![mobile audio clip converter](./public/screenshots/mobileAudioClip.png)
 ![mobile video search](./public/screenshots/mobileVideoSearch.png)
-![mobile video search suggestions](./public/screenshots/mobileVideoSearchSuggestions.png)
+![mobile video search suggestions](./public/screenshots/mobileVideoSearchSuiggestions.png)
 ![mobile video search results](./public/screenshots/mobileVideoSearchResults.png)
 
 ## Live Demos
